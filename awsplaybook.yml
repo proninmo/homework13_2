@@ -1,21 +1,23 @@
 ---
 - name: Create EC2 build VM
-#  hosts: localhost
+  hosts: localhost
   tasks:
-    - name: Create security group
+    - name: create security group
       ec2_group:
         name: builder_sg
-        description: Builder ec2 security group
+        description: sg with rule descriptions
+        region: us-east-1
         rules:
           - proto: tcp
             ports:
-            from_port: 22
-            to_port: 22
+              - 80
             cidr_ip: 0.0.0.0/0
-        rules_egress:
-          - proto: all
+            rule_desc: allow all on port 80
+          - proto: tcp
+            ports:
+              - 22
             cidr_ip: 0.0.0.0/0
-      register: ec2_sec
+            rule_desc: allow ssh
 
     - name: Create key pair
       ec2_key:
