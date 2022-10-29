@@ -20,14 +20,14 @@
       ec2_key:
         name: aws
         region: us-east-1
-      register: ec2_key_res
+      register: ec2_key_builder
 
     - name: Save private key
       copy:
-        content: "{{ ec2_key_res.key.private_key }}"
+        content: "{{ ec2_key_builder.key.private_key }}"
         dest: "./ec2build-private.key"       
         mode: 0600
-      when: ec2_key_res.changed
+      when: ec2_key_builder.changed
 
 #    - name: create aws instance
 #      ec2:
