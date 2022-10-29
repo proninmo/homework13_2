@@ -1,5 +1,6 @@
 ---
-- name: Create EC2 build VM 
+- name: Create EC2 build VM
+  hosts: localhost
   tasks:
     - name: Create security group
       ec2_group:
@@ -79,6 +80,7 @@
         mode: put
 
 - name: Create EC2 prod VM
+  hosts: localhost
   tasks:
     - name: Create EC2 web security group
       ec2_group:
