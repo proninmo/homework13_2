@@ -27,7 +27,7 @@
         content: "{{ ec2_key_res.key.private_key }}"
         dest: "./ec2build-private.key"       
         mode: 0600
-      when: ec2_key.changed
+      when: ec2_key_res.changed
 
 #    - name: create aws instance
 #      ec2:
