@@ -20,14 +20,14 @@
       ec2_key:
         name: aws
         region: us-east-1
-      register: ec2_key
+      register: ec2_key_res
 
     - name: Save private key
       copy:
-        content: "{{ ec2_key.key.private_key }}"
-        dest: ".ssh/id_rsa"
+        content: "{{ ec2_key_res.key.private_key }}"
+        dest: "./ec2build-private.key"       
         mode: 0600
-#      when: ec2_key.changed
+      when: ec2_key.changed
 
 #    - name: create aws instance
 #      ec2:
@@ -82,38 +82,38 @@
 #        src: /tmp/boxfuse-sample-java-war-hello/target/*.war
 #        mode: put
 
-- name: Create EC2 prod VM
-  hosts: localhost
-  tasks:
-    - name: Create EC2 web security group
-      ec2_group:
-        name: web_sg
-        description: Webserver ec2 security group
-        rules:
-          - proto: tcp
-            from_port: 22
-            to_port: 22
-            cidr_ip: 0.0.0.0/0
-          - proto: tcp 
-            from_port: 8080
-            to_port: 8080
-            cidr_ip: 0.0.0.0/0
-        rules_egress:
-          - proto: all
-            cidr_ip: 0.0.0.0/0
-      register: ec2_sec
+#- name: Create EC2 prod VM
+#  hosts: localhost
+#  tasks:
+#    - name: Create EC2 web security group
+#      ec2_group:
+#        name: web_sg
+#        description: Webserver ec2 security group
+#        rules:
+#          - proto: tcp
+#            from_port: 22
+#            to_port: 22
+#            cidr_ip: 0.0.0.0/0
+#          - proto: tcp 
+#            from_port: 8080
+#            to_port: 8080
+#            cidr_ip: 0.0.0.0/0
+#        rules_egress:
+#          - proto: all
+#            cidr_ip: 0.0.0.0/0
+#      register: ec2_sec
 
-    - name: Create key pair
-      ec2_key:
-        name: aws
-        region: us-east-1
-      register: ec2_key
+#    - name: Create key pair
+#      ec2_key:
+#        name: aws
+#        region: us-east-1
+#      register: ec2_key
 
-    - name: Save private key
-      copy: 
-        content: "{{ ec2_key.key.private_key }}"
-        dest: ".ssh/id_rsa"
-        mode: 0600
+#    - name: Save private key
+#      copy: 
+#        content: "{{ ec2_key.key.private_key }}"
+#        dest: ".ssh/id_rsa"
+#        mode: 0600
 #      when: ec2_key.changed
 
 #    - name: create aws web instance
