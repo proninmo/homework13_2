@@ -1,0 +1,145 @@
+---
+- name: Create EC2 build VM 
+  tasks:
+    - name: Create security group
+      ec2_group:
+        name: builder_sg
+        description: Builder ec2 security group
+        rules:
+          - proto: tcp
+            from_port: 22
+            to_port: 22
+            cidr_ip: 0.0.0.0/0
+        rules_egress:
+          - proto: all
+            cidr_ip: 0.0.0.0/0
+      register: ec2_sec
+
+    - name: Create key pair
+      ec2_key:
+        name: aws
+        region: us-east-1
+      register: ec2_key
+
+    - name: Save private key
+      copy: content="{{ ec2_key.key.private_key }}" dest=".ssh/id_rsa" mode=0600
+      when: ec2_key.changed
+
+    - name: create aws instance
+      ec2:
+        key_name: aws
+        region: us-east-1
+        group: builder_sg
+        instance_type: t2.micro
+        image: ami-08c40ec9ead489470
+        wait: yes
+        count: 1
+      register: output
+  
+    - name: print
+      debug:
+        var: output.instances[0].public_ip
+
+    - name: update inventory
+      add_host:
+        name: "{{ output.instances[0].public_ip }}"
+        groups: amazon
+
+    - name: Create bucket
+      amazon.aws.s3_bucket:
+        name: homework13bucket.com
+        state: present
+
+- name: Install packages & build artefact
+  hosts: amazon
+  tasks:
+    - name: Ensure packages
+      apt:
+        name: ['default-jre', 'maven', 'git']
+        state: present
+        update_cache: true
+
+    - name: Clone a github repository 
+      git:
+        repo: https://github.com/boxfuse/boxfuse-sample-java-war-hello.git
+        dest: /tmp
+        clone: true
+        update: true
+
+    - name: Building artefact
+      shell:
+        chdir: /tmp/boxfuse-sample-java-war-hello
+        cmd: mvn package
+
+    - name: Copy artefact to bucket
+      amazon.aws.aws_s3:
+        bucket: homework13bucket.com
+        object: /tmp/*.war
+        src: /tmp/boxfuse-sample-java-war-hello/target/*.war
+        mode: put
+
+- name: Create EC2 prod VM
+  tasks:
+    - name: Create EC2 web security group
+      ec2_group:
+        name: web_sg
+        description: Webserver ec2 security group
+        rules:
+          - proto: tcp
+            from_port: 22
+            to_port: 22
+            cidr_ip: 0.0.0.0/0
+          - proto: tcp 
+            from_port: 8080
+            to_port: 8080
+            cidr_ip: 0.0.0.0/0
+        rules_egress:
+          - proto: all
+            cidr_ip: 0.0.0.0/0
+      register: ec2_sec
+
+    - name: Create key pair
+      ec2_key:
+        name: aws
+        region: us-east-1
+      register: ec2_key
+
+    - name: Save private key
+      copy: content="{{ ec2_key.key.private_key }}" dest=".ssh/id_rsa" mode=0600
+      when: ec2_key.changed
+
+    - name: create aws web instance
+      ec2:
+        key_name: aws
+        region: us-east-1
+        group: web_sg
+        instance_type: t2.micro
+        image: ami-08c40ec9ead489470
+        wait: yes
+        count: 1
+      register: output
+  
+    - name: print
+      debug:
+        var: output.instances[0].public_ip
+
+    - name: update inventory
+      add_host:
+        name: "{{ output.instances[0].public_ip }}"
+        groups: amazon_prod
+
+- name: Run artefact
+  hosts: amazon_prod
+  tasks:
+  - name: Install packages
+    apt:
+      name: ['default-jre', 'tomcat9']
+      state: present
+      update_cache: true
+
+  - name: Get arteafct from s3
+    amazon.aws.aws_s3:
+      bucket: "{{ buck }}"
+      object: /tmp/*.war
+      dest: /var/lib/tomcat9/webapps
+      mode: get
