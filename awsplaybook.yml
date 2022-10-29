@@ -1,6 +1,6 @@
 ---
 - name: Create EC2 build VM
-  hosts: localhost
+#  hosts: localhost
   tasks:
     - name: Create security group
       ec2_group:
