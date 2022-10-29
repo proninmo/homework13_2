@@ -27,7 +27,7 @@
         content: "{{ ec2_key.key.private_key }}"
         dest: ".ssh/id_rsa"
         mode: 0600
-      when: ec2_key.changed
+#      when: ec2_key.changed
 
 #    - name: create aws instance
 #      ec2:
@@ -114,7 +114,7 @@
         content: "{{ ec2_key.key.private_key }}"
         dest: ".ssh/id_rsa"
         mode: 0600
-      when: ec2_key.changed
+#      when: ec2_key.changed
 
 #    - name: create aws web instance
 #      ec2:
