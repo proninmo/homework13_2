@@ -57,6 +57,7 @@
 
 - name: Install packages & build artefact
   hosts: amazon
+  remote_user: ubuntu
   tasks:
     - name: Ensure packages
       apt:
